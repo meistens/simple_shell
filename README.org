@@ -1,0 +1,2 @@
+* Simple Shell
+Repo contains a simple shell project written in C
