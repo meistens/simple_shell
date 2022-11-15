@@ -4,6 +4,6 @@
 void prompt1(void);
 void prompt2(void);
 
-char *read_cmd;
+char *read_cmd(void);
 
 #endif

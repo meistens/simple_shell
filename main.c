@@ -1,8 +1,3 @@
-/**
- * description: basic REPL file
- *
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -12,6 +7,9 @@
 int main(int argc, char **argv)
 {
 	char *cmd;
+
+	(void)argc;
+	(void)argv;
 
 	do {
 		/* prompt str and read cmd functions */
@@ -96,13 +94,8 @@ char *read_cmd(void)
 			fprintf(stderr, "err: buf err: %s\n", strerror(errno));
 			return (NULL);
 		}
-
-		/* using strcpy (check man page)*/
 		strcpy(ptr + ptrlen, buf);
 
-		/* if input ends in a newline */
-		/* if not escaped, input line is complete */
-		/* else remove the '//' and newline, print prompt2 sym */
 		if (buf[buflen - 1] == '\n')
 		{
 			if (buflen == 1 || buf[buflen - 2] != '\\')
@@ -112,7 +105,6 @@ char *read_cmd(void)
 			buflen -= 2;
 			prompt2();
 		}
-
 		ptrlen += buflen;
 	}
 	return (ptr);
