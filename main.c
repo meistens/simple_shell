@@ -1,111 +1,63 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include "shell.h"
+#include "main.h"
 
-int main(int argc, char **argv)
+int main(int ac, char **argv)
 {
-	char *cmd;
+	char *cursor = "(hsh) $";
+	char *ptr = NULL,
+		*ptr_cpy = NULL;
+	size_t n = 0;
+	ssize_t chars_read;
+	const char *delimitter = " \n";
+	int num_of_tokens = 0;
+	char *token;
+	int i;
 
-	(void)argc;
-	(void)argv;
+	(void)ac;
 
-	do {
-		/* prompt str and read cmd functions */
-		prompt1();
-		cmd = read_cmd();
-
-		/* check for command errors and exit REPL */
-		if (!cmd)
-		{
-			exit(EXIT_SUCCESS);
-		}
-
-		/* if str matches new line (empty command) */
-		/* free memory and continue with the loop */
-		if (cmd[0] == '\0' || strcmp(cmd, "\n") == 0)
-		{
-			free(cmd);
-			continue;
-		}
-
-		/* if str command matches exit, free memory */
-		/* and exit REPL loop */
-		if (strcmp(cmd, "exit\n") == 0)
-		{
-			free(cmd);
-			break;
-		}
-
-		/* else print the output of the command */
-		/* and free memory for next command */
-		printf("%s\n", cmd);
-		free(cmd);
-	} while (1);
-	exit(EXIT_SUCCESS);
-}
-
-/**
- * read_cmd - user command input(s)
- *
- * Return: pointer
- */
-
-char *read_cmd(void)
-{
-	/* create a buffer to store inputs in 1024 bytes */
-	/* pointer to NULL or end of address */
-	/* pointer length to zero */
-	char buf[1024];
-	char *ptr = NULL;
-	char ptrlen = 0;
-
-	/* while loop to get command string from stream/stdin in 1024 bytes */
-	while (fgets(buf, 1024, stdin))
+	do
 	{
-		/* assign strlen to buffer, if there is an input */
-		/* i.e ptr is not empty, create a buffer */
-		/* else reallocate memory to another ptr */
-		int buflen = strlen(buf);
+		printf("%s", cursor);
+		chars_read = getline(&ptr, &n, stdin);
 
-		if (!ptr)
+		if (chars_read == -1)
 		{
-			ptr = malloc(buflen + 1);
-		}
-		else
-		{
-			char *ptr2 = realloc(ptr, ptrlen + buflen + 1);
-			/* copy buffer(ptr) with user input */
-			if (ptr2)
-			{
-				ptr = ptr2;
-			}
-			else
-			{
-				free(ptr);
-				ptr = NULL;
-			}
+			printf("exiting shell \n");
+			return (-1);
 		}
 
-		/* if error allocating buffers, print err and return NULL */
-		if (!ptr)
+		ptr_cpy = malloc(sizeof(char) * chars_read);
+		if (ptr_cpy == NULL)
 		{
-			fprintf(stderr, "err: buf err: %s\n", strerror(errno));
-			return (NULL);
+			perror("err: memory alloc error");
+			return (-1);
 		}
-		strcpy(ptr + ptrlen, buf);
 
-		if (buf[buflen - 1] == '\n')
+		strcpy(ptr_cpy, ptr);
+
+		token = strtok(ptr, delimitter);
+
+		while (token != NULL)
 		{
-			if (buflen == 1 || buf[buflen - 2] != '\\')
-				return (ptr);
-
-			ptr[ptrlen + buflen - 2] = '\0';
-			buflen -= 2;
-			prompt2();
+			num_of_tokens++;
+			token = strtok(NULL, delimitter);
 		}
-		ptrlen += buflen;
-	}
-	return (ptr);
+		num_of_tokens++;
+
+		argv = malloc(sizeof(char *) * num_of_tokens);
+
+		token = strtok(ptr_cpy, delimitter);
+
+		for (i = 0; token != NULL; i++)
+		{
+			argv[i] = malloc(sizeof(char) * strlen(token));
+			strcpy(argv[i],token);
+			token = strtok(NULL, delimitter);
+		}
+		argv[i] = NULL;
+		execmd(argv);
+	} while (1);
+
+	free(ptr_cpy);
+	free(ptr);
+	return (0);
 }
